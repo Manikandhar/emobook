@@ -16,4 +16,6 @@ angular.module('Platzi').controller('BaseCtrl', ['$scope', function($scope){
 		}
 	});
 	
+	//Understood the changes done with git
+	
 }]);
