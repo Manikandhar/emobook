@@ -30,8 +30,8 @@
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/anonymous node/sails user/foobar.git"
+    "url": "git://github.com/Manikandhar/emobook.git"
   },
-  "author": "anonymous node/sails user",
+  "author": "Manikandhar",
   "license": ""
 }
