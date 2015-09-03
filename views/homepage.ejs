@@ -1,6 +1,160 @@
-<div ng-app="Platzi" ng-controller="BaseCtrl">
-    <h1>Hello world</h1>
-    <ul>
-        <li ng-repeat="emoji in emojis">{{emoji.text}}</li>
-    </ul>
-</div>
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.bar rect {
+  fill: #848484;
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #fff;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.line {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script>
+
+// Generate random values for illustration purposes. Replace the value of "values" with the queried data
+var values = d3.range(1000).map(d3.random.bates(10));
+
+
+var curvedata = [];
+// populates the curvedata array with the formatted data (don't change this function)
+getData(Math.floor(d3.min(values)),Math.ceil(d3.max(values)),d3.mean(values),d3.deviation(values),1);
+
+// A formatter for counts.
+var formatCount = d3.format(",.0f");
+
+// Adjusts size of graph container
+var margin = {top: 10, right: 30, bottom: 30, left: 30},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+// Determines the scale of the data to the height and weight of the graph & the range of data values
+var xcurve = d3.scale.linear()
+    .range([0, width]);
+var ycurve = d3.scale.linear()
+    .range([height, 0]);
+xcurve.domain(d3.extent(curvedata, function(d) {
+    return d.q;
+}));
+ycurve.domain(d3.extent(curvedata, function(d) {
+    return d.p;
+}));
+
+var line = d3.svg.line()
+    .x(function(d) {
+        return xcurve(d.q);
+    })
+    .y(function(d) {
+        return ycurve(d.p);
+    });
+	
+var x = d3.scale.linear()
+    .domain([Math.floor(d3.min(values)), Math.ceil(d3.max(values))])
+    .range([0, width]);
+
+// Generate the histogram data using twenty uniformly-spaced bins...
+var histogramdata = d3.layout.histogram()
+    .bins(x.ticks(20))
+    (values);
+	// then scales the height of the histogram based on the height of the graph container
+var y = d3.scale.linear()
+    .domain([0, d3.max(histogramdata, function(d) {return d.y;})])
+    .range([height, 0]);
+
+// Generates the x-axis placeholder
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+// The drawing of the svg actually begins in the next few lines
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	// Histogram is drawn
+var bar = svg.selectAll(".bar")
+    .data(histogramdata)
+  .enter().append("g")
+    .attr("class", "bar")
+    .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+	// Curve is drawn first
+svg.append("path")
+    .datum(curvedata)
+    .attr("class", "line")
+    .attr("d", line);
+	// Histogram bars drawn next
+bar.append("rect")
+    .attr("x", 1)
+    .attr("width", x(histogramdata[0].dx) - 1)
+    .attr("height", function(d) { return height - y(d.y); });
+	// Histogram count values inserted
+bar.append("text")
+    .attr("dy", ".75em")
+    .attr("y", 6)
+    .attr("x", x(histogramdata[0].dx) / 2)
+    .attr("text-anchor", "middle")
+    .text(function(d) { return formatCount(d.y); });
+	// x-axis is drawn
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+	
+function getData(min, max, mean, sd, scaleconst) {
+
+	// Loops to populate curvedata array with 
+	// Probabily:Quantile pairs
+	for (var i = 0; i < 100000; i++) {
+		q = getUniformDistributionSample(min ,max) // calc random draw from normal dist
+		p = gaussian(q, mean, sd, scaleconst) // calc prob of rand draw
+		el = {
+			"q": q,
+			"p": p
+		}
+		curvedata.push(el)
+	};
+
+	// need to sort for plotting
+	//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+	curvedata.sort(function(x, y) {
+		return x.q - y.q;
+	});	
+}
+
+// Sample from a uniform distribution
+function getUniformDistributionSample(min,max) {
+	return Math.random() * (max - min) + min;
+}
+
+//taken from Jason Davies science library
+// https://github.com/jasondavies/science.js/
+function gaussian(x, mean, sigma, scaleconst) {
+	var gaussianConstant = 1 / Math.sqrt(2 * Math.PI),
+
+    x = (x - mean) / sigma;
+    return (gaussianConstant * Math.exp(-.5 * x * x) / sigma) * scaleconst;
+};
+
+</script>
