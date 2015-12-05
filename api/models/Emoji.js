@@ -9,10 +9,6 @@ module.exports = {
 
   attributes: {
 
-      text:{
-        
-      }
-      
   }
 };
 
